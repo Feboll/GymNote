@@ -1,0 +1,38 @@
+<resources>
+
+    <!-- Base application theme. -->
+	<style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+		<item name="@android:actionBarStyle">@style/MyActionBar</item>
+		<item name="actionBarStyle">@style/MyActionBar</item>
+		<item name="android:panelBackground">@color/ex_list_childe</item>
+		<item name="@android:actionBarWidgetTheme">@style/Theme.AppTheme.actionBar.widget</item>
+		<item name="actionBarWidgetTheme">@style/Theme.AppCompat.Light</item>
+	</style>
+
+	<!--Стили на меню-->
+	<style name="Theme.AppTheme.actionBar.widget" parent="@android:style/Theme.Holo">
+		<item name="@android:popupMenuStyle">@style/Theme.AppTheme.actionBar.PopupMenu</item>
+		<item name="android:dropDownListViewStyle">@style/Theme.AppTheme.actionBar.DropDownListView</item>
+	</style>
+
+	<style name="Theme.AppTheme.actionBar.PopupMenu" parent="@android:style/Widget.Holo.ListPopupWindow">
+		<item name="android:popupBackground">@color/action_bar_background</item>
+	</style>
+
+	<style name="DropDownNav" parent="@android:style/Widget.Holo.Spinner">
+		<!--item name="android:background">@color/action_bar_background</item>
+		<item name="android:popupBackground">@color/action_bar_background</item>
+		<item name="android:dropDownSelector">@color/action_bar_background</item-->
+	</style>
+
+	<style name="Theme.AppTheme.actionBar.DropDownListView" parent="@android:style/Widget.Holo.ListView.DropDown">
+		<item name="android:listSelector">@color/button_background</item>
+	</style>
+	<!--Конец стилей на меню-->
+
+	<!-- ActionBar styles -->
+	<style name="MyActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+		<item name="android:background">@color/action_bar_background</item>
+		<item name="background">@color/action_bar_background</item>
+	</style>
+</resources>

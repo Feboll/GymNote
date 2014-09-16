@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<color name="action_bar_background">#222a3f</color>
+	<color name="button_background">#566885</color>
+	<color name="app_background">#d6e1ef</color>
+	<color name="button_text_color">#f6f5f3</color>
+	<color name="other_color">#948e8c</color>
+	<color name="ex_list_childe">#ffffff</color>
+</resources>

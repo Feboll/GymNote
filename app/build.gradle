@@ -1,0 +1,27 @@
+apply plugin: 'com.android.application'
+
+android {
+	signingConfigs {
+	}
+	compileSdkVersion 20
+	buildToolsVersion '20.0.0'
+	defaultConfig {
+		applicationId "com.feboll.gymnote"
+		minSdkVersion 10
+		targetSdkVersion 20
+		versionCode 6
+		versionName "1.0.7"
+	}
+	buildTypes {
+		release {
+			runProguard false
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+		}
+	}
+}
+
+dependencies {
+	compile fileTree(include: ['*.jar'], dir: 'libs')
+	compile 'com.android.support:appcompat-v7:19.+'
+	compile 'com.google.android.gms:play-services:5.0.77'
+}

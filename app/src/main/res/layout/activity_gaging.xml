@@ -1,0 +1,47 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+		android:background="@color/app_background"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context="com.feboll.gymnote.Gaging">
+
+	<ListView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/value_list"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentStart="true"
+		android:layout_below="@+id/profile"/>
+
+	<FrameLayout
+		android:layout_width="fill_parent"
+		android:id="@+id/profile"
+		android:paddingRight="@dimen/activity_horizontal_margin"
+		android:paddingLeft="@dimen/activity_horizontal_margin"
+		android:layout_height="wrap_content">
+
+		<Button
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:minHeight="50dp"
+			android:text="@string/add_profile"
+			android:id="@+id/add_profile"
+			android:background="@drawable/btn_selector"
+			android:textColor="@color/button_text_color"
+			android:textSize="20dp"
+			android:onClick="addProfile"
+			android:layout_alignParentTop="true"
+			android:layout_alignParentRight="true"
+			android:layout_alignParentEnd="true"/>
+
+		<Spinner
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/profile_list"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentStart="true"/>
+	</FrameLayout>
+
+</RelativeLayout>
