@@ -260,7 +260,7 @@ public class Statistics extends ActionBarActivity {
 		mRenderer.setXLabelsAngle(0f);
 		mRenderer.setXLabelsPadding(10);
 		mRenderer.setXAxisMin(0.8);
-		mRenderer.setXAxisMax(i+0.2);
+		mRenderer.setXAxisMax(i-i/3);
 		mRenderer.setYAxisMax(max+max*0.1);
 		mRenderer.setYAxisMin(min-max*0.1);
 		mRenderer.setYLabelsAlign(Paint.Align.RIGHT);
