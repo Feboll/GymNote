@@ -34,6 +34,8 @@ public class Gaging extends ActionBarActivity {
 	ListView valueList;
 	int profilePosition = 0;
 
+	private DBManadger db;
+
     @Override
     protected void onResume() {
 
@@ -57,14 +59,9 @@ public class Gaging extends ActionBarActivity {
 				valueTitle.add(valueT[i]);
 				value.add("0");
 			}
-			prifileAdapterSpinner = new ArrayAdapter<String>(Gaging.this, android.R.layout.simple_spinner_item, profileTitle);
-			profileList.setAdapter(prifileAdapterSpinner);
 
-			DBHelper dbOpenHelper = new DBHelper(this, "gymnote");
-			SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-
-			final Cursor cProfile = database.query("user_profile", null, null, null, null, null, null);
-			cProfile.moveToFirst();
+			db = new DBManadger(this);
+			final Cursor cProfile = db.getAllUser_profile();
 			if(cProfile.getCount()>0){
 				addProfile.setVisibility(View.GONE);
 				profileList.setVisibility(View.VISIBLE);
@@ -95,8 +92,10 @@ public class Gaging extends ActionBarActivity {
 				valueList.setVisibility(View.GONE);
 			}
 			cProfile.close();
-			dbOpenHelper.close();
+			db.close();
 
+			prifileAdapterSpinner = new ArrayAdapter<String>(Gaging.this, android.R.layout.simple_spinner_item, profileTitle);
+			profileList.setAdapter(prifileAdapterSpinner);
 
 			listadapter = new ArrayAdapter(this, R.layout.list_view, R.id.label, daynames);
 			valueList.setAdapter(listadapter);
@@ -111,9 +110,8 @@ public class Gaging extends ActionBarActivity {
 				@Override
 				public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 					profilePosition = position;
-					DBHelper dbOpenHelper = new DBHelper(Gaging.this, "gymnote");
-					SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-					Cursor cProfile = database.query("user_profile", null, null, null, null, null, null);
+
+					Cursor cProfile = db.getAllUser_profile();
 					cProfile.moveToPosition(position);
 					//Это переделать
 					value.clear();
@@ -133,7 +131,6 @@ public class Gaging extends ActionBarActivity {
 					//
 					listadapter.notifyDataSetChanged();
 					cProfile.close();
-					dbOpenHelper.close();
 				}
 				@Override
 				public void onNothingSelected(AdapterView<?> arg0) {
@@ -176,11 +173,6 @@ public class Gaging extends ActionBarActivity {
 					startActivity(intent);
 					return true;
 				}
-				/*case R.id.chat: {
-					return true;
-				}
-				case R.id.settings:{
-				}*/
 			}
         return super.onOptionsItemSelected(item);
     }
@@ -214,18 +206,17 @@ public class Gaging extends ActionBarActivity {
 			addBtn.setText(R.string.add_profile_value);
 			titlePopup.setText(valueTitle.get(id-1));
 			profileTitleE.setInputType(InputType.TYPE_CLASS_NUMBER);
+			profileTitleE.setText(value.get(id-1));
 		}
 
 		addBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				ContentValues cv = new ContentValues();
-				DBHelper dbOpenHelper = new DBHelper(Gaging.this, "gymnote");
-				SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
 				if (id==0){
 					cv.put("name", profileTitleE.getText().toString());
 					profileTitle.add(profileTitleE.getText().toString());
-					database.insert("user_profile", null, cv);
+					db.insertItem("user_profile", cv);
 
 					addBtn.setText(R.string.add_profile);
 					titlePopup.setText(R.string.profile_label_btn);
@@ -233,15 +224,16 @@ public class Gaging extends ActionBarActivity {
 				} else {
 					addBtn.setText(R.string.add_profile_value);
 					titlePopup.setText(valueTitle.get(id-1));
-					Cursor cProfile = database.query("user_profile", null, null, null, null, null, null);
+					Cursor cProfile = db.getAllUser_profile();
 					cProfile.moveToPosition(profilePosition);
 					cv = new ContentValues();
 					cv.put(cProfile.getColumnName(id+2), profileTitleE.getText().toString());
-					database.update("user_profile", cv, "_id=" + cProfile.getString(0), null);
+					db.updateItem("user_profile", cv, "_id=" + cProfile.getString(0));
+					cProfile.close();
 				}
 
 				prifileAdapterSpinner.notifyDataSetChanged();
-				Cursor cProfile = database.query("user_profile", null, null, null, null, null, null);
+				Cursor cProfile = db.getAllUser_profile();
 				if(cProfile.getCount()>0){
 					addProfile.setVisibility(View.GONE);
 					profileList.setVisibility(View.VISIBLE);
@@ -269,7 +261,7 @@ public class Gaging extends ActionBarActivity {
 					profileList.setVisibility(View.GONE);
 					valueList.setVisibility(View.GONE);
 				}
-				dbOpenHelper.close();
+				cProfile.close();
 				profileTitleE.setText("");
 				alertDialog.dismiss();
 			}

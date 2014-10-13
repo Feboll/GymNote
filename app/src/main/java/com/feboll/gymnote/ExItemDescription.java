@@ -24,18 +24,19 @@ import android.widget.Toast;
 
 import com.feboll.gymnote.R;
 
+import java.io.Console;
 import java.util.ArrayList;
 
 public class ExItemDescription extends ActionBarActivity {
 	EditText exNameEd, exDesEdit;
 	int cExGroudPos = 0, flag = 0, groupPosition, childPosition;
 	String itemId;
-	AlertDialog.Builder dlg;
-	Cursor cExGroud, cExChilode;
+	String editTitle, editDes;
 	ArrayList<String> data;
 	TextView groupName, exTitle, exDes;
 	Button dropBtn, editBtn;
 
+	private DBManadger db;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,32 +46,35 @@ public class ExItemDescription extends ActionBarActivity {
 			childPosition = getIntent().getExtras().getInt("childPosition");
 
 			cExGroudPos = groupPosition;
-			DBHelper dbOpenHelper = new DBHelper(ExItemDescription.this, "gymnote");
-			SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
 
-			cExGroud = database.query("categoryOfExercise", null, null, null, null, null, null);
+			db = new DBManadger(this);
+
+			Cursor cExGroud = db.getAllCategoryOfExercise();
 			cExGroud.moveToFirst();
+
 			data = new ArrayList<String>();
 			do data.add(cExGroud.getString(1)); while (cExGroud.moveToNext());
 
-			cExChilode = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id", "exDescription"}, "categoryOfExercise_id=?",
-					new String[] { String.valueOf(groupPosition + 1)},	null, null, null);
-			cExChilode.moveToPosition(childPosition);
-			cExGroud.moveToPosition(groupPosition);
+			Cursor cExChilode = db.getAllGroupExercise(null, String.valueOf(groupPosition + 1));
+				cExChilode.moveToPosition(childPosition);
 
-			groupName = (TextView)findViewById(R.id.exGroup);
-			exTitle = (TextView)findViewById(R.id.exName);
-			exDes = (TextView)findViewById(R.id.exDes);
+				cExGroud.moveToPosition(groupPosition);
 
-			groupName.setText(cExGroud.getString(1));
-			exTitle.setText(cExChilode.getString(1));
-			exDes.setText(cExChilode.getString(3));
-			itemId = cExChilode.getString(0);
+				groupName = (TextView)findViewById(R.id.exGroup);
+				exTitle = (TextView)findViewById(R.id.exName);
+				exDes = (TextView)findViewById(R.id.exDes);
 
-			cExChilode.close(); cExGroud.close();
-			dbOpenHelper.close();
+				groupName.setText(cExGroud.getString(1));
+				exTitle.setText(cExChilode.getString(2));
+			editTitle = cExChilode.getString(2);
+				exDes.setText(cExChilode.getString(3));
+			editDes = cExChilode.getString(3);
+				itemId = cExChilode.getString(0);
+
+			cExChilode.close();
+			cExGroud.close();
+			db.close();
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -107,12 +111,6 @@ public class ExItemDescription extends ActionBarActivity {
 					startActivity(intent);
 					return true;
 				}
-				/*case R.id.chat: {
-					return true;
-				}
-				case R.id.settings:{
-
-				}*/
 			}
         return super.onOptionsItemSelected(item);
     }
@@ -154,81 +152,58 @@ public class ExItemDescription extends ActionBarActivity {
 			@Override
 			public void onNothingSelected(AdapterView<?> arg0) {  }
 		});
-		DBHelper dbOpenHelper = new DBHelper(ExItemDescription.this, "gymnote");
-		SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-		cExChilode = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id", "exDescription"},
-				"_id=? AND categoryOfExercise_id=? ",	new String[] {itemId, String.valueOf(groupPosition+1)},	null, null, null);
-		cExChilode.moveToFirst();
 
-		exNameEd.setText(cExChilode.getString(1));
-		exDesEdit.setText(cExChilode.getString(3));
-
-		cExChilode.close();
-		dbOpenHelper.close();
+		exNameEd.setText(editTitle);
+		exDesEdit.setText(editDes);
 
 		editBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				if (exNameEd.getText().length()!=0) {
-					DBHelper dbOpenHelper = new DBHelper(ExItemDescription.this, "gymnote");
-					SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
 
-					cExChilode = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id", "exDescription"},
-							"_id=? AND categoryOfExercise_id=? ",	new String[] {itemId, String.valueOf(groupPosition+1)},	null, null, null);
-					cExChilode.moveToFirst();
+					 ContentValues cv = new ContentValues();
+					 cv.put("exercise", exNameEd.getText().toString());
+					 cv.put("categoryOfExercise_id", cExGroudPos+1);
+					 cv.put("exDescription", exDesEdit.getText().toString());
 
-					ContentValues cv = new ContentValues();
-					cv.put("exercise", exNameEd.getText().toString());
-					cv.put("categoryOfExercise_id", cExGroudPos+1);
-					cv.put("exDescription", exDesEdit.getText().toString());
+					db.updateItem("exercise", cv, "_id=" + itemId);
 
-					database.update("exercise", cv, "_id=" + cExChilode.getString(0), null);
-
-					cExGroud = database.query("categoryOfExercise", null, null, null, null, null, null);
+					Cursor cExGroud = db.getAllCategoryOfExercise();
 					cExGroud.moveToPosition(cExGroudPos);
 
-					groupName.setText(cExGroud.getString(1));
-					exTitle.setText(exNameEd.getText().toString());
-					exDes.setText(exDesEdit.getText().toString());
+					 groupName.setText(cExGroud.getString(1));
+					editTitle = exNameEd.getText().toString();
+					editDes = exDesEdit.getText().toString();
+					 exTitle.setText(exNameEd.getText().toString());
+					 exDes.setText(exDesEdit.getText().toString());
 
-					groupPosition = cExGroudPos;
-					cExChilode = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id", "exDescription"}, "categoryOfExercise_id=?",
-							new String[] { String.valueOf(groupPosition+1)},	null, null, null);
+					 groupPosition = cExGroudPos;
+					 Cursor cExChilode = db.getAllGroupExercise(null, String.valueOf(groupPosition+1));
 					if (flag==1) childPosition = cExChilode.getCount()-1;
 
-					database.close();
-					dbOpenHelper.close();
 					flag=0;
+					cExGroud.close();
+					cExChilode.close();
 					alertDialog.dismiss();
 				} else {
 					Toast.makeText(getBaseContext(), "Введите название упражнения", Toast.LENGTH_SHORT).show();
 				}
-
 			}
 		});
 
 		dropBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-                AlertDialog.Builder confirmationDialog = new AlertDialog.Builder(ExItemDescription.this);
-                confirmationDialog.setMessage(R.string.confirmation_message).setPositiveButton(R.string.confirmation_yes, new DialogInterface.OnClickListener(){
-                    public void onClick(DialogInterface dialog, int arg1) {
-                        DBHelper dbOpenHelper = new DBHelper(ExItemDescription.this, "gymnote");
-                        SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-                        cExChilode = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id", "exDescription"},
-                                "_id=? AND categoryOfExercise_id=? ",	new String[] {itemId, String.valueOf(groupPosition+1)},	null, null, null);
-                        cExChilode.moveToFirst();
-                        database.delete("exercise", "_id=" + cExChilode.getString(0), null);
-                        cExChilode.close();
-                        dbOpenHelper.close();
-                        alertDialog.dismiss();
-                        finish();
-                    }
-                }).setNegativeButton(R.string.confirmation_no, new DialogInterface.OnClickListener(){
-                    public void onClick(DialogInterface dialog, int arg1) {
-
-                    }
-                }).show();
+			AlertDialog.Builder confirmationDialog = new AlertDialog.Builder(ExItemDescription.this);
+			confirmationDialog.setMessage(R.string.confirmation_message).setPositiveButton(R.string.confirmation_yes, new DialogInterface.OnClickListener(){
+					public void onClick(DialogInterface dialog, int arg1) {
+							 db.deleteItem("exercise", "_id=" + itemId);
+							alertDialog.dismiss();
+							finish();
+					}
+			}).setNegativeButton(R.string.confirmation_no, new DialogInterface.OnClickListener(){
+					public void onClick(DialogInterface dialog, int arg1) { }
+			}).show();
 			}
 		});
 	}

@@ -163,12 +163,6 @@ public class newTrainingEx extends ActionBarActivity {
 				startActivity(intent);
 				return true;
 			}
-				/*case R.id.chat: {
-					return true;
-				}
-				case R.id.settings:{
-
-				}*/
 		}
 			return super.onOptionsItemSelected(item);
 	}
@@ -218,21 +212,31 @@ public class newTrainingEx extends ActionBarActivity {
 	}
 
 	public void endTraining (View v){
-		DBHelper dbOpenHelper = new DBHelper(this, "gymnote");
-		SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-		Cursor cTraining = database.query("training", null, null, null, null, null, null);
-		cTraining.moveToLast();
-		Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
-				new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
-		if (cEx.getCount()==0)	database.delete("training", "_id =" + cTraining.getString(0), null);
-		else {
-			String DateTimeString = (String) DateFormat.format("yyyy-MM-dd kk:mm",new Date());
-			ContentValues cv = new ContentValues();
-			cv.put("training_end", DateTimeString);
-			database.update("training", cv, "_id=" + cTraining.getString(0), null);
-		}
-		database.close();
-		dbOpenHelper.close();
-		finish();
+		AlertDialog.Builder confirmationDialog = new AlertDialog.Builder(newTrainingEx.this);
+		confirmationDialog.setMessage(R.string.confirmation_message).setPositiveButton(R.string.confirmation_yes, new DialogInterface.OnClickListener(){
+			public void onClick(DialogInterface dialog, int arg1) {
+				DBHelper dbOpenHelper = new DBHelper(newTrainingEx.this, "gymnote");
+				SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
+				Cursor cTraining = database.query("training", null, null, null, null, null, null);
+				cTraining.moveToLast();
+				Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
+						new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
+				if (cEx.getCount()==0)	database.delete("training", "_id =" + cTraining.getString(0), null);
+				else {
+					String DateTimeString = (String) DateFormat.format("yyyy-MM-dd kk:mm",new Date());
+					ContentValues cv = new ContentValues();
+					cv.put("training_end", DateTimeString);
+					database.update("training", cv, "_id=" + cTraining.getString(0), null);
+				}
+				database.close();
+				dbOpenHelper.close();
+				finish();
+			}
+		}).setNegativeButton(R.string.confirmation_no, new DialogInterface.OnClickListener(){
+			public void onClick(DialogInterface dialog, int arg1) {
+
+			}
+		}).show();
+
 	}
 }

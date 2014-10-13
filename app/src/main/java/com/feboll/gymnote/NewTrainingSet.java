@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -22,9 +21,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.view.View.OnClickListener;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.ads.*;
 
@@ -43,27 +40,20 @@ public class NewTrainingSet extends ActionBarActivity {
 	Cursor cExName;
 	private AdView adView;
 
+	private SetHelper SetHelper = new SetHelper();
+
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_training_set);
 
-		// Создание экземпляра adView.
+		// Создание экземпляра adView. Добавление рекламы
 		adView = new AdView(this);
 		adView.setAdUnitId("ca-app-pub-5748071594809710/2182312782");
 		adView.setAdSize(AdSize.BANNER);
-
-		// Поиск разметки LinearLayout (предполагается, что ей был присвоен
-		// атрибут android:id="@+id/mainLayout").
 		LinearLayout layout = (LinearLayout)findViewById(R.id.mainLayout);
-
-		// Добавление в разметку экземпляра adView.
 		layout.addView(adView);
-
-		// Инициирование общего запроса.
 		AdRequest adRequest = new AdRequest.Builder().build();
-
-		// Загрузка adView с объявлением.
 		adView.loadAd(adRequest);
 
 			boxAdapter = new ListAdapter(NewTrainingSet.this, set, weight);
@@ -116,19 +106,9 @@ public class NewTrainingSet extends ActionBarActivity {
 			lvMain.setAdapter(boxAdapter);
 
 			LinearLayout mainLayout = (LinearLayout)findViewById(R.id.mainLayout);
-			int flagConnection = 0;
 			ConnectivityManager cm =(ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-			if (cm != null){
-				NetworkInfo[] netInfo = cm.getAllNetworkInfo();
-				if(netInfo != null)
-					for (NetworkInfo ni : netInfo) {
-						if (ni.getTypeName().equalsIgnoreCase("WIFI"))
-							if (ni.isConnected()) flagConnection = 1;
-						if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
-							if (ni.isConnected()) flagConnection = 2;
-					}
-			}
-			if (flagConnection == 0) mainLayout.setVisibility(View.GONE);
+			boolean isConnected = SetHelper.checkConnection(cm);
+			if (isConnected) mainLayout.setVisibility(View.GONE);
 			else mainLayout.setVisibility(View.VISIBLE);
     }
 
@@ -167,12 +147,6 @@ public class NewTrainingSet extends ActionBarActivity {
 					startActivity(intent);
 					return true;
 				}
-				/*case R.id.chat: {
-					return true;
-				}
-				case R.id.settings:{
-
-				}*/
 			}
         return super.onOptionsItemSelected(item);
     }
@@ -213,6 +187,7 @@ public class NewTrainingSet extends ActionBarActivity {
 		edWeight = (EditText) alertDialog.findViewById(R.id.weight);
 		edRepetition.setText("");
 		edWeight.setText("");
+		edRepetition.requestFocus();
 		if (id == 2){
 			editBtn = (Button) alertDialog.findViewById(R.id.editBtn);
 			dropBtn = (Button) alertDialog.findViewById(R.id.dropBtn);

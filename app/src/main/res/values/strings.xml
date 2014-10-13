@@ -47,7 +47,7 @@
     <string name="edit_ex">Редактировать упражнение</string>
     <string name="title_activity_user_size">Замеры</string>
     <string name="add_profile">Добавить профиль</string>
-    <string name="add_profile_value">Добавить значение</string>
+    <string name="add_profile_value">Изменить значение</string>
     <string name="title_activity_user_profile">Список профилей</string>
     <string name="profile_label_btn">Название профиля</string>
     <string name="hello_world">Hello world!</string>

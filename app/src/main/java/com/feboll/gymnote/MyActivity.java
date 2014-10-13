@@ -21,7 +21,9 @@ import java.sql.SQLException;
 
 public class MyActivity extends ActionBarActivity {
 	Button newTrainingBtn, resumeTrainingBtn;
-	TextView trainingCount, lastTraining, weightCount, heightCount, imt;
+	TextView trainingCount, lastTraining, weightCount, heightCount;
+	private DBManadger db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,31 +35,23 @@ public class MyActivity extends ActionBarActivity {
 			lastTraining = (TextView)findViewById(R.id.lastTraining);
 			weightCount = (TextView)findViewById(R.id.weightCount);
 			heightCount = (TextView)findViewById(R.id.heightCount);
-			//imt = (TextView)findViewById(R.id.IMT);
 
-			DBHelper dbOpenHelper = new DBHelper(this, "gymnote");
-			SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-			Cursor cTraining = database.query("training", null, null, null, null, null, null);
+			db = new DBManadger(this);
+
+			Cursor cTraining = db.getAllTraining();
 			cTraining.moveToLast();
-			Cursor cUser = database.query("user_profile", null, null, null, null, null, null);
+
+			Cursor cUser = db.getAllUser_profile();
 			cUser.moveToFirst();
+
 			if (cUser.getCount()>0){
 				weightCount.setText(cUser.getString(3) + " кг.");
 				heightCount.setText(cUser.getString(4) + " см.");
-				float wCount = cUser.getFloat(3);
-				float hCount = (float) Math.pow(cUser.getFloat(4)/100, 2);
-				float myfloatvariable = wCount/hCount;
-				String imtCount = String.format("%.2f", myfloatvariable);
-				/*if(cUser.getFloat(4)!=0){
-					imt.setText(imtCount);
-				} else {
-					imt.setText("0");
-				}*/
 			} else {
 				weightCount.setText("-");
 				heightCount.setText("-");
-				//imt.setText("-");
 			}
+
 			if (cTraining.getCount()!=0 && cTraining.getString(2)==null){
 				newTrainingBtn.setVisibility(View.GONE);
 				resumeTrainingBtn.setVisibility(View.VISIBLE);
@@ -79,18 +73,15 @@ public class MyActivity extends ActionBarActivity {
 					lastTraining.setText(cTraining.getString(1));
 				}
 			}
+
 			cUser.close();
 			cTraining.close();
-			dbOpenHelper.close();
-
-
+			db.close();
     }
 
 	@Override
 	protected void onResume() {
-		DBHelper dbOpenHelper = new DBHelper(MyActivity.this, "gymnote");
-		SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-		Cursor cTraining = database.query("training", null, null, null, null, null, null);
+		Cursor cTraining = db.getAllTraining();
 		cTraining.moveToLast();
 		if (cTraining.getCount()!=0 && cTraining.getString(2)==null){
 			newTrainingBtn.setVisibility(View.GONE);
@@ -113,28 +104,17 @@ public class MyActivity extends ActionBarActivity {
 				lastTraining.setText(cTraining.getString(1));
 			}
 		}
-		Cursor cUser = database.query("user_profile", null, null, null, null, null, null);
+		Cursor cUser = db.getAllUser_profile();
 		cUser.moveToFirst();
 		if (cUser.getCount()>0){
 			weightCount.setText(cUser.getString(3) + " кг.");
 			heightCount.setText(cUser.getString(4) + " см.");
-			float wCount = cUser.getFloat(3);
-			float hCount = (float) Math.pow(cUser.getFloat(4)/100, 2);
-			float myfloatvariable = wCount/hCount;
-			String imtCount = String.format("%.2f", myfloatvariable);
-			/*if(cUser.getFloat(4)!=0){
-				imt.setText(imtCount);
-			} else {
-				imt.setText("0");
-			}*/
 		} else {
 			weightCount.setText("-");
 			heightCount.setText("-");
-			//imt.setText("-");
 		}
 		cUser.close();
 		cTraining.close();
-		dbOpenHelper.close();
 		super.onResume();
 	}
     @Override
@@ -172,9 +152,6 @@ public class MyActivity extends ActionBarActivity {
 					startActivity(intent);
 					return true;
 				}
-				/*case R.id.settings:{
-
-				}*/
 			}
         return super.onOptionsItemSelected(item);
     }
@@ -185,7 +162,6 @@ public class MyActivity extends ActionBarActivity {
 		startActivity(intent);
 	}
 	public void resumeTraining(View v){
-		//Intent intent = new Intent(MyActivity.this, ResumeTrainingEx.class);
 		Intent intent = new Intent(MyActivity.this, newTrainingEx.class);
 		intent.putExtra("resume", 1);
 		startActivity(intent);

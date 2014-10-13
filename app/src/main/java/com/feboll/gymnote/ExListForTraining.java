@@ -17,6 +17,7 @@ public class ExListForTraining extends ActionBarActivity {
 
 	public final static String THIEF_G = "com.feboll.gymnote.THIEF_G";
 	public final static String THIEF_P = "com.feboll.gymnote.THIEF_P";
+	private DBManadger db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,23 +29,22 @@ public class ExListForTraining extends ActionBarActivity {
 			ArrayList<ArrayList<String>> groupChilde = new ArrayList<ArrayList<String>>();
 			ArrayList<String> children = new ArrayList<String>();
 
-			DBHelper dbOpenHelper = new DBHelper(this, "gymnote");
-			SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-			Cursor cExGroud = database.query("categoryOfExercise", null, null, null, null, null, null);
+			db = new DBManadger(this);
+
+			Cursor cExGroud = db.getAllCategoryOfExercise();
 			Cursor cExChilode;
 			cExGroud.moveToFirst();
 			do {
 				groups.add(cExGroud.getString(1));
-				cExChilode = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id"}, "categoryOfExercise_id=?", new String[] { cExGroud.getString(0)},
-						null, null, null);
-				cExChilode.moveToFirst();
+				cExChilode = db.getAllGroupExercise(null, cExGroud.getString(0));
 				do children.add(cExChilode.getString(1)); while (cExChilode.moveToNext());
 				groupChilde.add(children);
 				children = new ArrayList<String>();
 			} while (cExGroud.moveToNext());
+
 			cExGroud.close();
 			cExChilode.close();
-			dbOpenHelper.close();
+			db.close();
 
 			ExpListAdapter adapter = new ExpListAdapter(getApplicationContext(), groupChilde, groups);
 			ExlistView.setAdapter(adapter);
@@ -96,12 +96,6 @@ public class ExListForTraining extends ActionBarActivity {
 					startActivity(intent);
 					return true;
 				}
-				/*case R.id.chat: {
-					return true;
-				}
-				case R.id.settings:{
-
-				}*/
 			}
         return super.onOptionsItemSelected(item);
     }

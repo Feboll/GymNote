@@ -35,6 +35,8 @@ public class ExList extends ActionBarActivity {
 
 	Cursor cExGroud, cExChilode;
 
+	private DBManadger db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,29 +50,28 @@ public class ExList extends ActionBarActivity {
 			groupChilde = new ArrayList<ArrayList<String>>();
 			children = new ArrayList<String>();
 
-			DBHelper dbOpenHelper = new DBHelper(ExList.this, "gymnote");
-			final SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
+			db = new DBManadger(this);
 
-			cExGroud = database.query("categoryOfExercise", null, null, null, null, null, null);
-			cExGroud.moveToFirst();
+			cExGroud = db.getAllCategoryOfExercise();
+				cExGroud.moveToFirst();
 
-			do {
-				groups.add(cExGroud.getString(1));
-				cExChilode = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id"}, "categoryOfExercise_id=?", new String[] { cExGroud.getString(0)},
-						null, null, null);
-				cExChilode.moveToFirst();
-				do children.add(cExChilode.getString(1)); while (cExChilode.moveToNext());
-				groupChilde.add(children);
-				children = new ArrayList<String>();
-			} while (cExGroud.moveToNext());
+				do {
+					groups.add(cExGroud.getString(1));
+					cExChilode = db.getAllGroupExercise(null, cExGroud.getString(0));
+					cExChilode.moveToFirst();
 
-			adapter = new ExpListAdapter(getApplicationContext(), groupChilde, groups);
-			ExlistView.setAdapter(adapter);
+					do children.add(cExChilode.getString(2)); while (cExChilode.moveToNext());
+					groupChilde.add(children);
+					children = new ArrayList<String>();
+				} while (cExGroud.moveToNext());
 
-			cExGroud.moveToFirst();
-			do data.add(cExGroud.getString(1)); while (cExGroud.moveToNext());
-			database.close();
-			dbOpenHelper.close();
+				adapter = new ExpListAdapter(getApplicationContext(), groupChilde, groups);
+				ExlistView.setAdapter(adapter);
+
+				cExGroud.moveToFirst();
+				do data.add(cExGroud.getString(1)); while (cExGroud.moveToNext());
+			cExGroud.close();
+			db.close();
 
 			adapter = new ExpListAdapter(getApplicationContext(), groupChilde, groups);
 			ExlistView.setAdapter(adapter);
@@ -122,31 +123,23 @@ public class ExList extends ActionBarActivity {
 					startActivity(intent);
 					return true;
 				}
-				/*case R.id.chat: {
-					return true;
-				}
-				case R.id.settings:{
-
-				}*/
 			}
         return super.onOptionsItemSelected(item);
     }
 	@Override
 	protected void onResume() {
 		int groupPos=0, childePos=0;
-		DBHelper dbOpenHelper = new DBHelper(ExList.this, "gymnote");
-		final SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
 
-		cExGroud = database.query("categoryOfExercise", null, null, null, null, null, null);
+		cExGroud = db.getAllCategoryOfExercise();
 		cExGroud.moveToFirst();
 
 		do {
-			cExChilode = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id"}, "categoryOfExercise_id=?", new String[] { cExGroud.getString(0)},
-					null, null, null);
+			cExChilode = db.getAllGroupExercise(null, cExGroud.getString(0));
 			cExChilode.moveToFirst();
+
 			groupChilde.get(groupPos).clear();
 			do {
-				groupChilde.get(groupPos).add(cExChilode.getString(1));
+				groupChilde.get(groupPos).add(cExChilode.getString(2));
 				childePos++;
 			} while (cExChilode.moveToNext());
 
@@ -157,7 +150,6 @@ public class ExList extends ActionBarActivity {
 		adapter.notifyDataSetChanged();
 
 		cExGroud.close(); cExChilode.close();
-		dbOpenHelper.close();
 
 		super.onResume();
 	}
@@ -197,8 +189,6 @@ public class ExList extends ActionBarActivity {
 				exDes = (EditText) alertDialog.findViewById(R.id.titleEx);
 
 				if (exName.getText().length()!=0) {
-					DBHelper dbOpenHelper = new DBHelper(ExList.this, "gymnote");
-					SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
 
 					groupChilde.get(cExGroudPos).add(exName.getText().toString());
 					adapter.notifyDataSetChanged();
@@ -208,9 +198,8 @@ public class ExList extends ActionBarActivity {
 					cv.put("categoryOfExercise_id", cExGroudPos+1);
 					cv.put("exDescription", exDes.getText().toString());
 
-					database.insert("exercise", null, cv);
-					database.close();
-                    alertDialog.dismiss();
+					db.insertItem("exercise", cv);
+          alertDialog.dismiss();
 				} else {
 					Toast.makeText(getBaseContext(), "Введите название упражнения",	Toast.LENGTH_SHORT).show();
 				}
