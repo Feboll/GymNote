@@ -26,7 +26,7 @@ public class DBHelper extends SQLiteOpenHelper {
 	}
 
 	public DBHelper(Context context, String databaseName) {
-		super(context, databaseName, null, 4);
+		super(context, databaseName, null, 1);
 		this.context = context;
 		String packageName = context.getPackageName();
 		DB_PATH = String.format("//data//data//%s//databases//", packageName);

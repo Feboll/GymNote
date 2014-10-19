@@ -49,13 +49,13 @@ public class ExItemDescription extends ActionBarActivity {
 
 			db = new DBManadger(this);
 
-			Cursor cExGroud = db.getAllCategoryOfExercise();
+			Cursor cExGroud = db.getCategoryOfExercise();
 			cExGroud.moveToFirst();
 
 			data = new ArrayList<String>();
 			do data.add(cExGroud.getString(1)); while (cExGroud.moveToNext());
 
-			Cursor cExChilode = db.getAllGroupExercise(null, String.valueOf(groupPosition + 1));
+			Cursor cExChilode = db.getExercise(null, String.valueOf(groupPosition + 1));
 				cExChilode.moveToPosition(childPosition);
 
 				cExGroud.moveToPosition(groupPosition);
@@ -168,7 +168,7 @@ public class ExItemDescription extends ActionBarActivity {
 
 					db.updateItem("exercise", cv, "_id=" + itemId);
 
-					Cursor cExGroud = db.getAllCategoryOfExercise();
+					Cursor cExGroud = db.getCategoryOfExercise();
 					cExGroud.moveToPosition(cExGroudPos);
 
 					 groupName.setText(cExGroud.getString(1));
@@ -178,7 +178,7 @@ public class ExItemDescription extends ActionBarActivity {
 					 exDes.setText(exDesEdit.getText().toString());
 
 					 groupPosition = cExGroudPos;
-					 Cursor cExChilode = db.getAllGroupExercise(null, String.valueOf(groupPosition+1));
+					 Cursor cExChilode = db.getExercise(null, String.valueOf(groupPosition+1));
 					if (flag==1) childPosition = cExChilode.getCount()-1;
 
 					flag=0;

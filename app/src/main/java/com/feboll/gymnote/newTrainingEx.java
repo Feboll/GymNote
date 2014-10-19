@@ -7,10 +7,10 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,7 +20,6 @@ import android.widget.ArrayAdapter;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -31,6 +30,8 @@ public class newTrainingEx extends ActionBarActivity {
 	ArrayList<String> Ex;
 	int groupPoz, childePoz, resume = 0;
 	Button dropBtn;
+	private DBManadger db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,29 +41,28 @@ public class newTrainingEx extends ActionBarActivity {
 			Ex = new ArrayList<String>();
 			ExListAdapter = new ArrayAdapter<String>(this, R.layout.list_view, R.id.label, Ex);
 			ListView List = (ListView)findViewById(R.id.listView01);
-			DBHelper dbOpenHelper = new DBHelper(this, "gymnote");
-			SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
+
+			db = new DBManadger(this);
 
 			if (resume==1){
-				Cursor cTraining = database.query("training", null, null, null, null, null, null);
+				Cursor cTraining = db.getTraining();
 				cTraining.moveToLast();
 				if (cTraining.getCount()!=0){
-					Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
-							new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
+					Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
 					cEx.moveToFirst();
 					if (cEx.getCount()>0) {
 						do {
-							Cursor cExName = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id"}, "_id=?",
-									new String[] { String.valueOf(cEx.getString(2))},	null, null, null);
+							Log.v("my", "_id=" + cEx.getString(0) + " cTraining_id = " + cEx.getString(1));
+							Cursor cExName = db.getExercise(cEx.getString(2), null);
 							cExName.moveToFirst();
-							Ex.add(cExName.getString(1));
+							Log.v("my", "ex_id=" + cExName.getString(0));
+							Ex.add(cExName.getString(2));
 							cExName.close();
 						} while (cEx.moveToNext());
 					}
 					cTraining.close(); cEx.close();
 				}
 			}
-
 
 			List.setAdapter(ExListAdapter);
 
@@ -80,9 +80,9 @@ public class newTrainingEx extends ActionBarActivity {
 					return true;
 				}
 			});
-			dbOpenHelper.close();
-
+			db.close();
     }
+
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		AlertDialog dialogDetails = null;
@@ -103,27 +103,22 @@ public class newTrainingEx extends ActionBarActivity {
                 AlertDialog.Builder confirmationDialog = new AlertDialog.Builder(newTrainingEx.this);
                 confirmationDialog.setMessage(R.string.confirmation_message).setPositiveButton(R.string.confirmation_yes, new OnClickListener(){
                     public void onClick(DialogInterface dialog, int arg1) {
-                        DBHelper dbOpenHelper = new DBHelper(newTrainingEx.this, "gymnote");
-                        SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-                        Cursor cTraining = database.query("training", null, null, null, null, null, null);
-                        cTraining.moveToLast();
-                        Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
-                                new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
-                        cEx.moveToPosition(id);
-                        Ex.remove(id);
-                        ExListAdapter.notifyDataSetChanged();
+									Cursor cTraining = db.getTraining();
+                  cTraining.moveToLast();
+									Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
+									cEx.moveToPosition(id);
+									Ex.remove(id);
+									ExListAdapter.notifyDataSetChanged();
 
-                        database.delete("training_exercise", "_id=" + cEx.getString(0), null);
-                        cEx.close(); cTraining.close();
-                        dbOpenHelper.close();
-                        alertDialog.dismiss();
+									db.deleteItem("training_exercise", "_id=" + cEx.getString(0));
+									cEx.close(); cTraining.close();
+									alertDialog.dismiss();
                     }
                 }).setNegativeButton(R.string.confirmation_no, new OnClickListener(){
                     public void onClick(DialogInterface dialog, int arg1) {
-                        alertDialog.dismiss();
+                   alertDialog.dismiss();
                     }
                 }).show();
-
 			}
 		});
 	}
@@ -181,32 +176,31 @@ public class newTrainingEx extends ActionBarActivity {
 				groupPoz = data.getIntExtra(ExListForTraining.THIEF_G, -1) + 1;
 				childePoz = data.getIntExtra(ExListForTraining.THIEF_P, -1);
 
-				DBHelper dbOpenHelper = new DBHelper(this, "gymnote");
-				SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-				Cursor cExChilode = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id"},
-						"categoryOfExercise_id=?", new String[] { String.valueOf(groupPoz)}, null, null, null);
+				Cursor cExChilode = db.getExercise(null, String.valueOf(groupPoz));
 				cExChilode.moveToPosition(childePoz);
-				Cursor cTraining = database.query("training", null, null, null, null, null, null);
+
+				Cursor cTraining = db.getTraining();
 				cTraining.moveToLast();
 				ContentValues cv = new ContentValues();
 				if(cTraining.getCount()<=0 || cTraining.getString(2)!=null){
 					String currentDateTimeString = (String) DateFormat.format("yyyy-MM-dd kk:mm", new Date());
 					cv.put("training_start", currentDateTimeString);
-					database.insert("training", null, cv);
+					db.insertItem("training", cv);
 				}
-				cTraining = database.query("training", null, null, null, null, null, null);
+
+				cTraining = db.getTraining();
 				cTraining.moveToLast();
 
 				cv = new ContentValues();
 				cv.put("training_id", cTraining.getString(0));
 				cv.put("exercise_id", cExChilode.getString(0));
 				cv.put("categoryOfExercise_id", groupPoz);
-				database.insert("training_exercise", null, cv);
+				db.insertItem("training_exercise", cv);
+				Log.v("my", "ex_id=" + cExChilode.getString(0));
+				Ex.add(cExChilode.getString(2));
 
-				Ex.add(cExChilode.getString(1));
 				ExListAdapter.notifyDataSetChanged();
 				cTraining.close(); cExChilode.close();
-				dbOpenHelper.close();
 			}
 		}
 	}
@@ -215,27 +209,20 @@ public class newTrainingEx extends ActionBarActivity {
 		AlertDialog.Builder confirmationDialog = new AlertDialog.Builder(newTrainingEx.this);
 		confirmationDialog.setMessage(R.string.confirmation_message).setPositiveButton(R.string.confirmation_yes, new DialogInterface.OnClickListener(){
 			public void onClick(DialogInterface dialog, int arg1) {
-				DBHelper dbOpenHelper = new DBHelper(newTrainingEx.this, "gymnote");
-				SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-				Cursor cTraining = database.query("training", null, null, null, null, null, null);
+				Cursor cTraining = db.getTraining();
 				cTraining.moveToLast();
-				Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
-						new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
-				if (cEx.getCount()==0)	database.delete("training", "_id =" + cTraining.getString(0), null);
+				Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
+				if (cEx.getCount()==0)	db.deleteItem("training", "_id =" + cTraining.getString(0));
 				else {
 					String DateTimeString = (String) DateFormat.format("yyyy-MM-dd kk:mm",new Date());
 					ContentValues cv = new ContentValues();
 					cv.put("training_end", DateTimeString);
-					database.update("training", cv, "_id=" + cTraining.getString(0), null);
+					db.updateItem("training", cv, "_id=" + cTraining.getString(0));
 				}
-				database.close();
-				dbOpenHelper.close();
 				finish();
 			}
 		}).setNegativeButton(R.string.confirmation_no, new DialogInterface.OnClickListener(){
-			public void onClick(DialogInterface dialog, int arg1) {
-
-			}
+			public void onClick(DialogInterface dialog, int arg1) {		}
 		}).show();
 
 	}

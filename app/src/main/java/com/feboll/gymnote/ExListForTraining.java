@@ -31,13 +31,13 @@ public class ExListForTraining extends ActionBarActivity {
 
 			db = new DBManadger(this);
 
-			Cursor cExGroud = db.getAllCategoryOfExercise();
+			Cursor cExGroud = db.getCategoryOfExercise();
 			Cursor cExChilode;
 			cExGroud.moveToFirst();
 			do {
 				groups.add(cExGroud.getString(1));
-				cExChilode = db.getAllGroupExercise(null, cExGroud.getString(0));
-				do children.add(cExChilode.getString(1)); while (cExChilode.moveToNext());
+				cExChilode = db.getExercise(null, cExGroud.getString(0));
+				do children.add(cExChilode.getString(2)); while (cExChilode.moveToNext());
 				groupChilde.add(children);
 				children = new ArrayList<String>();
 			} while (cExGroud.moveToNext());

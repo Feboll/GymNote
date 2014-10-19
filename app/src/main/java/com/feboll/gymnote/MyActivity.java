@@ -38,10 +38,10 @@ public class MyActivity extends ActionBarActivity {
 
 			db = new DBManadger(this);
 
-			Cursor cTraining = db.getAllTraining();
+			Cursor cTraining = db.getTraining();
 			cTraining.moveToLast();
 
-			Cursor cUser = db.getAllUser_profile();
+			Cursor cUser = db.getUser_profile();
 			cUser.moveToFirst();
 
 			if (cUser.getCount()>0){
@@ -81,7 +81,7 @@ public class MyActivity extends ActionBarActivity {
 
 	@Override
 	protected void onResume() {
-		Cursor cTraining = db.getAllTraining();
+		Cursor cTraining = db.getTraining();
 		cTraining.moveToLast();
 		if (cTraining.getCount()!=0 && cTraining.getString(2)==null){
 			newTrainingBtn.setVisibility(View.GONE);
@@ -104,7 +104,7 @@ public class MyActivity extends ActionBarActivity {
 				lastTraining.setText(cTraining.getString(1));
 			}
 		}
-		Cursor cUser = db.getAllUser_profile();
+		Cursor cUser = db.getUser_profile();
 		cUser.moveToFirst();
 		if (cUser.getCount()>0){
 			weightCount.setText(cUser.getString(3) + " кг.");

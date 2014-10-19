@@ -61,7 +61,7 @@ public class Gaging extends ActionBarActivity {
 			}
 
 			db = new DBManadger(this);
-			final Cursor cProfile = db.getAllUser_profile();
+			final Cursor cProfile = db.getUser_profile();
 			if(cProfile.getCount()>0){
 				addProfile.setVisibility(View.GONE);
 				profileList.setVisibility(View.VISIBLE);
@@ -111,7 +111,7 @@ public class Gaging extends ActionBarActivity {
 				public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 					profilePosition = position;
 
-					Cursor cProfile = db.getAllUser_profile();
+					Cursor cProfile = db.getUser_profile();
 					cProfile.moveToPosition(position);
 					//Это переделать
 					value.clear();
@@ -224,7 +224,7 @@ public class Gaging extends ActionBarActivity {
 				} else {
 					addBtn.setText(R.string.add_profile_value);
 					titlePopup.setText(valueTitle.get(id-1));
-					Cursor cProfile = db.getAllUser_profile();
+					Cursor cProfile = db.getUser_profile();
 					cProfile.moveToPosition(profilePosition);
 					cv = new ContentValues();
 					cv.put(cProfile.getColumnName(id+2), profileTitleE.getText().toString());
@@ -233,7 +233,7 @@ public class Gaging extends ActionBarActivity {
 				}
 
 				prifileAdapterSpinner.notifyDataSetChanged();
-				Cursor cProfile = db.getAllUser_profile();
+				Cursor cProfile = db.getUser_profile();
 				if(cProfile.getCount()>0){
 					addProfile.setVisibility(View.GONE);
 					profileList.setVisibility(View.VISIBLE);

@@ -52,12 +52,12 @@ public class ExList extends ActionBarActivity {
 
 			db = new DBManadger(this);
 
-			cExGroud = db.getAllCategoryOfExercise();
+			cExGroud = db.getCategoryOfExercise();
 				cExGroud.moveToFirst();
 
 				do {
 					groups.add(cExGroud.getString(1));
-					cExChilode = db.getAllGroupExercise(null, cExGroud.getString(0));
+					cExChilode = db.getExercise(null, cExGroud.getString(0));
 					cExChilode.moveToFirst();
 
 					do children.add(cExChilode.getString(2)); while (cExChilode.moveToNext());
@@ -86,7 +86,6 @@ public class ExList extends ActionBarActivity {
 				}
 			});
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -130,11 +129,11 @@ public class ExList extends ActionBarActivity {
 	protected void onResume() {
 		int groupPos=0, childePos=0;
 
-		cExGroud = db.getAllCategoryOfExercise();
+		cExGroud = db.getCategoryOfExercise();
 		cExGroud.moveToFirst();
 
 		do {
-			cExChilode = db.getAllGroupExercise(null, cExGroud.getString(0));
+			cExChilode = db.getExercise(null, cExGroud.getString(0));
 			cExChilode.moveToFirst();
 
 			groupChilde.get(groupPos).clear();
