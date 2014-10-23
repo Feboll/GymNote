@@ -59,6 +59,7 @@
 	<string name="drop_profile_btn">Удалить профиль</string>
 	<string name="title_activity_user_profile_item">Описание профиля</string>
 	<string name="confirmation_message">Вы действительно хотите удалить?</string>
+	<string name="confirmation_message_finish_training">Вы действительно хотите завершить тренировку?</string>
 
 	<string name="confirmation_yes">Подтвердить</string>
 	<string name="confirmation_no">Отмена</string>

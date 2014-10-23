@@ -40,6 +40,8 @@ public class NewTrainingSet extends ActionBarActivity {
 	Cursor cExName;
 	private AdView adView;
 
+	private DBManadger db;
+
 	private SetHelper SetHelper = new SetHelper();
 
 	@Override
@@ -61,25 +63,21 @@ public class NewTrainingSet extends ActionBarActivity {
 			textKps = (TextView)findViewById(R.id.kps);
 			textTonaj = (TextView)findViewById(R.id.tonaj);
 
-			DBHelper dbOpenHelper = new DBHelper(NewTrainingSet.this, "gymnote");
-			final SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
+		db = new DBManadger(this);
 
-			Cursor cTraining = database.query("training", null, null, null, null, null, null);
+			Cursor cTraining = db.getTraining(null);
 			cTraining.moveToLast();
 
-			Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
-					new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
+			Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
 			cEx.moveToPosition(pos);
 
-			cExName = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id"}, "_id=?",
-					new String[] { String.valueOf(cEx.getString(2))},	null, null, null);
+			cExName = db.getExercise(cEx.getString(2), null);
 			cExName.moveToFirst();
 
 			TextView tv = (TextView)findViewById(R.id.exTitle);
-			tv.setText(cExName.getString(1));
+			tv.setText(cExName.getString(2));
 
-			Cursor cSet = database.query("training_set", new String[] {"_id", "weight", "repetition", "training_gymnastic_num", "training_id"},
-					"training_gymnastic_num=? AND training_id=?", new String[] { cEx.getString(0), cTraining.getString(0)},	null, null, null);
+			Cursor cSet = db.getTraining_set(null, cTraining.getString(0), null, cEx.getString(0));
 
 			if (cSet.getCount()>0) {
 				cSet.moveToFirst();
@@ -93,7 +91,7 @@ public class NewTrainingSet extends ActionBarActivity {
 			textKps.setText(String.valueOf(kps));
 			textTonaj.setText(String.valueOf(tonaj));
 			cTraining.close(); cEx.close();
-			dbOpenHelper.close();
+			db.close();
 			// настраиваем список
 			ListView lvMain = (ListView) findViewById(R.id.setList);
 
@@ -172,15 +170,10 @@ public class NewTrainingSet extends ActionBarActivity {
 	protected void onPrepareDialog(int id, Dialog dialog) {
 		final AlertDialog alertDialog = (AlertDialog) dialog;
 
-		DBHelper dbOpenHelper = new DBHelper(NewTrainingSet.this, "gymnote");
-		final SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-
-		Cursor cTraining = database.query("training", null, null, null, null, null, null); 			cTraining.moveToLast();
-		Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
-				new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
+		Cursor cTraining = db.getTraining(null); 			cTraining.moveToLast();
+		Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
 		cEx.moveToPosition(pos);
-		final Cursor cSet = database.query("training_set", new String[] {"_id", "weight", "repetition", "training_gymnastic_num", "training_id", "warmUp"},
-				"training_gymnastic_num=? AND training_id=?", new String[] { cEx.getString(0), cTraining.getString(0)},	null, null, null);
+		final Cursor cSet = db.getTraining_set(null, cTraining.getString(0), null, cEx.getString(0));
 		cSet.moveToPosition(position);
 
 		edRepetition = (EditText) alertDialog.findViewById(R.id.repetition);
@@ -191,8 +184,8 @@ public class NewTrainingSet extends ActionBarActivity {
 		if (id == 2){
 			editBtn = (Button) alertDialog.findViewById(R.id.editBtn);
 			dropBtn = (Button) alertDialog.findViewById(R.id.dropBtn);
-			edRepetition.setText(cSet.getString(2));
-			edWeight.setText(cSet.getString(1));
+			edRepetition.setText(cSet.getString(5));
+			edWeight.setText(cSet.getString(4));
 			editBtn.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
@@ -200,7 +193,7 @@ public class NewTrainingSet extends ActionBarActivity {
 					cv.put("weight", edWeight.getText().toString());
 					cv.put("repetition", edRepetition.getText().toString());
 
-					database.update("training_set", cv, "_id=" + cSet.getString(0), null);
+					db.updateItem("training_set", cv, "_id=" + cSet.getString(0));
 
 					tonaj -= Integer.parseInt(weight.get(position))*Integer.parseInt(set.get(position));
 					kps -= Integer.parseInt(set.get(position));
@@ -226,7 +219,7 @@ public class NewTrainingSet extends ActionBarActivity {
                     AlertDialog.Builder confirmationDialog = new AlertDialog.Builder(NewTrainingSet.this);
                     confirmationDialog.setMessage(R.string.confirmation_message).setPositiveButton(R.string.confirmation_yes, new DialogInterface.OnClickListener(){
                         public void onClick(DialogInterface dialog, int arg1) {
-                            database.delete("training_set", "_id=" + cSet.getString(0), null);
+                            db.deleteItem("training_set", "_id=" + cSet.getString(0));
 
                             tonaj -= Integer.parseInt(weight.get(position))*Integer.parseInt(set.get(position));
                             kps -= Integer.parseInt(set.get(position));
@@ -255,12 +248,10 @@ public class NewTrainingSet extends ActionBarActivity {
 			addBtn.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					DBHelper dbOpenHelper = new DBHelper(NewTrainingSet.this, "gymnote");
-					SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-					Cursor cTraining = database.query("training", null, null, null, null, null, null);
+
+					Cursor cTraining = db.getTraining(null);
 					cTraining.moveToLast();
-					Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
-							new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
+					Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
 					cEx.moveToPosition(pos);
 					ContentValues cv = new ContentValues();
 
@@ -280,7 +271,7 @@ public class NewTrainingSet extends ActionBarActivity {
 					cv.put("training_id", cTraining.getString(0));
 					cv.put("training_gymnastic_num", cEx.getString(0));
 					cv.put("exercise_id", cExName.getString(0));
-					database.insert("training_set", null, cv);
+					db.insertItem("training_set", cv);
 
 					kps += Integer.parseInt(repeat);
 					tonaj += Integer.parseInt(weightCount)*Integer.parseInt(repeat);
@@ -290,7 +281,6 @@ public class NewTrainingSet extends ActionBarActivity {
 
 					textKps.setText(String.valueOf(kps));
 					textTonaj.setText(String.valueOf(tonaj));
-					dbOpenHelper.close();
 					boxAdapter.notifyDataSetChanged();
 					alertDialog.dismiss();
 				}

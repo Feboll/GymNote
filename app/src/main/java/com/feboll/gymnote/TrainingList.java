@@ -23,13 +23,13 @@ import com.feboll.gymnote.R;
 import java.util.ArrayList;
 
 public class TrainingList extends ActionBarActivity {
-	ArrayList<String> training = new ArrayList<String>();
-	ArrayList<ArrayList<String>> trainingExGroup = new ArrayList<ArrayList<String>>();
-	ArrayList<String> trainingEx = new ArrayList<String>();
+	ArrayList<String> training, trainingEx;
+	ArrayList<ArrayList<String>> trainingExGroup;
 	ExpListAdapter adapter;
 	int groupPosition, childePosition, flag = -1, i=0;
 	TextView noTraining;
 	ExpandableListView ExlistView;
+	private DBManadger db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,38 +38,34 @@ public class TrainingList extends ActionBarActivity {
 			noTraining = (TextView)findViewById(R.id.noTrainingItem);
 			ExlistView = (ExpandableListView)findViewById(R.id.trainingListView);
 
+			training = new ArrayList<String>();
+			trainingExGroup = new ArrayList<ArrayList<String>>();
+			trainingEx = new ArrayList<String>();
 
-			DBHelper dbOpenHelper = new DBHelper(this, "gymnote");
-			SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-			Cursor cTraining = database.query("training", null, null, null, null, null, null);
-			Cursor cTrainingExChilode;
+			db = new DBManadger(this);
+
+			Cursor cTraining = db.getTraining(null);
 			cTraining.moveToFirst();
 			if (cTraining.getCount()>0){
 				do {
 					training.add(cTraining.getString(1));
-					cTrainingExChilode = database.query("training_exercise",
-							new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"},
-							"training_id=?", new String[] { cTraining.getString(0)},
-							null, null, null);
+					Cursor cTrainingExChilode = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
 					cTrainingExChilode.moveToFirst();
 
 					if(cTrainingExChilode.getCount()>0){
 						do {
-							Cursor cTrainingExName = database.query("exercise",  new String[] {"_id", "categoryOfExercise_id", "exercise"},
-									"_id=?", new String[] { cTrainingExChilode.getString(2)}, null, null, null, null);
+							Cursor cTrainingExName = db.getExercise(cTrainingExChilode.getString(2), null);
 							cTrainingExName.moveToFirst();
 							trainingEx.add(cTrainingExName.getString(2));
 							cTrainingExName.close();
-
 						} while (cTrainingExChilode.moveToNext());
 					} else {
-						database.delete("training", "_id=" + cTraining.getString(0), null);
+						db.deleteItem("training", "_id=" + cTraining.getString(0));
 						training.remove(cTraining.getPosition());
 					}
 					trainingExGroup.add(trainingEx);
 					trainingEx = new ArrayList<String>();
 				} while (cTraining.moveToNext());
-				cTrainingExChilode.close();
 				noTraining.setVisibility(View.GONE);
 				ExlistView.setVisibility(View.VISIBLE);
 			} else {
@@ -77,7 +73,7 @@ public class TrainingList extends ActionBarActivity {
 				ExlistView.setVisibility(View.GONE);
 			}
 			cTraining.close();
-			dbOpenHelper.close();
+			db.close();
 
 			adapter = new ExpListAdapter(getApplicationContext(), trainingExGroup, training);
 			ExlistView.setAdapter(adapter);
@@ -94,20 +90,19 @@ public class TrainingList extends ActionBarActivity {
 			ExlistView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 				@Override
 				public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+					groupPosition = ExpandableListView.getPackedPositionGroup(id);
+					childePosition = ExpandableListView.getPackedPositionChild(id);
 					if (ExpandableListView.getPackedPositionType(id) == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
-						groupPosition = ExpandableListView.getPackedPositionGroup(id);
 						flag = 0;
 						showDialog(groupPosition);
 						return true;
 					} else {
-						childePosition = ExpandableListView.getPackedPositionChild(id);
 						flag = 1;
 						showDialog(childePosition);
 						return true;
 					}
 				}
 			});
-			dbOpenHelper.close();
     }
 
 	@Override
@@ -135,36 +130,32 @@ public class TrainingList extends ActionBarActivity {
                 AlertDialog.Builder confirmationDialog = new AlertDialog.Builder(TrainingList.this);
                 confirmationDialog.setMessage(R.string.confirmation_message).setPositiveButton(R.string.confirmation_yes, new DialogInterface.OnClickListener(){
                     public void onClick(DialogInterface dialog, int arg1) {
-                        DBHelper dbOpenHelper = new DBHelper(TrainingList.this, "gymnote");
-                        SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-                        Cursor cTraining = database.query("training", null, null, null, null, null, null);
+
+                        Cursor cTraining = db.getTraining(null);
                         cTraining.moveToPosition(groupPosition);
                         if(flag == 0){
                             training.remove(groupPosition);
                             trainingExGroup.remove(groupPosition);
 
-                            database.delete("training_set", "training_id=" + cTraining.getString(0), null);
-                            database.delete("training_exercise", "training_id=" + cTraining.getString(0), null);
-                            database.delete("training", "_id=" + cTraining.getString(0), null);
+                          db.deleteItem("training_set", "training_id=" + cTraining.getString(0));
+													db.deleteItem("training_exercise", "training_id=" + cTraining.getString(0));
+													db.deleteItem("training", "_id=" + cTraining.getString(0));
                         } else {
-                            Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
-                                    new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
+                            Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
                             cEx.moveToPosition(childePosition);
                             trainingExGroup.get(groupPosition).remove(childePosition);
-                            database.delete("training_set", "training_gymnastic_num=? AND training_id=?",
-                                    new String[] { cEx.getString(0), cTraining.getString(0)} );
-                            database.delete("training_exercise", "_id=" + cEx.getString(0), null);
+                            db.deleteItem("training_set", "training_gymnastic_num=" + cEx.getString(0) + " AND training_id=" + cTraining.getString(0));
+														db.deleteItem("training_exercise", "_id=" + cEx.getString(0));
 
-                            cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
-                                    new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
+														cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
                             if (cEx.getCount()==0){
                                 training.remove(groupPosition);
                                 trainingExGroup.remove(groupPosition);
-                                database.delete("training", "_id=" + cTraining.getString(0), null);
+															db.deleteItem("training", "_id=" + cTraining.getString(0));
                             }
                             cEx.close();
                         }
-                        cTraining = database.query("training", null, null, null, null, null, null);
+											cTraining = db.getTraining(null);
                         if (cTraining.getCount()==0){
                             noTraining.setVisibility(View.VISIBLE);
                             ExlistView.setVisibility(View.GONE);
@@ -172,9 +163,7 @@ public class TrainingList extends ActionBarActivity {
                             noTraining.setVisibility(View.GONE);
                             ExlistView.setVisibility(View.VISIBLE);
                         }
-
                         cTraining.close();
-                        dbOpenHelper.close();
                         adapter.notifyDataSetChanged();
                         alertDialog.dismiss();
                     }
@@ -183,7 +172,6 @@ public class TrainingList extends ActionBarActivity {
                         alertDialog.dismiss();
                     }
                 }).show();
-
 			}
 		});
 	}
@@ -223,12 +211,6 @@ public class TrainingList extends ActionBarActivity {
 					startActivity(intent);
 					return true;
 				}
-				/*case R.id.chat: {
-					return true;
-				}
-				case R.id.settings:{
-
-				}*/
 			}
         return super.onOptionsItemSelected(item);
     }

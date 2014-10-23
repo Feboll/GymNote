@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
 
+import java.sql.Struct;
 import java.util.ArrayList;
 
 public class DBManadger extends SQLiteAssetHelper {
@@ -61,17 +62,18 @@ public class DBManadger extends SQLiteAssetHelper {
 	//----------------------------------------------------------------------------------------------------------------------------------
 
 	//Получаем все тренировки-----------------------------------------------------------------------------------------------------------
-	public Cursor getTraining() {
+	public Cursor getTraining(String training_id) {
 		SQLiteDatabase db = getReadableDatabase();
 		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 
+		String [] argAllValue = new String[]{training_id};
 		String [] sqlSelect = {"_id", "training_start", "training_end"};
 		String sqlTables = "training";
 
 		qb.setTables(sqlTables);
-		Cursor c = qb.query(db, sqlSelect, null, null, null, null, null);
-		c.moveToFirst();
-		db.close();
+		Cursor c = costumCursor(argAllValue, sqlSelect, sqlTables, db, qb);
+
+		c.moveToFirst(); db.close();
 		return c;
 	}
 	//----------------------------------------------------------------------------------------------------------------------------------
@@ -79,35 +81,15 @@ public class DBManadger extends SQLiteAssetHelper {
 	//Получаем все упражнения в тренировке----------------------------------------------------------------------------------------------
 	public Cursor getTraining_Exercise(String training_exercise_id, String training_id, String exercise_id, String categoryOfExercise_id,
 																		 String trExYeasyValue, String trExNormalValue, String trExHardValue) {
-		int j=0;
-		SQLiteDatabase db = getReadableDatabase();
-		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-
 		String [] argAllValue = new String[]{training_exercise_id, training_id, exercise_id, categoryOfExercise_id, trExYeasyValue, trExNormalValue, trExHardValue};
-		ArrayList<String> argValueA = new ArrayList<String>();
-		String argSelection = "";
 		String [] sqlSelect = {"_id", "training_id", "exercise_id", "categoryOfExercise_id", "trExYeasy", "trExNormal", "trExHard"};
 		String sqlTables = "training_exercise";
 
-		for (int i=0; i<argAllValue.length; i++){
-			if (argAllValue[i]!=null) {
-				if (j>0) {
-					argSelection = argSelection + " AND " + sqlSelect[i] + "=?";
-				} else {
-					argSelection = argSelection + sqlSelect[i] + "=?";
-				}
-				argValueA.add(argAllValue[i]);
-				j++;
-			}
-		}
-		String [] argValue = new String[argValueA.size()];
-		for (int i=0; i<argValueA.size(); i++){
-			argValue[i] = argValueA.get(i);
-			Log.v("my", argValue[i]);
-		}
-		Log.v("my", argSelection + "87474");
+		SQLiteDatabase db = getReadableDatabase();
+		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+
 		qb.setTables(sqlTables);
-		Cursor c = qb.query(db, sqlSelect, argSelection, argValue, null, null, null);
+		Cursor c = costumCursor(argAllValue, sqlSelect, sqlTables, db, qb);
 
 		c.moveToFirst();
 		db.close();
@@ -116,15 +98,35 @@ public class DBManadger extends SQLiteAssetHelper {
 	//----------------------------------------------------------------------------------------------------------------------------------
 
 	//Получаем все подходы в упражнении-------------------------------------------------------------------------------------------------
-	public Cursor getTraining_set() {
+	public Cursor getTraining_set(String training_set_id, String training_id, String exercise_id, String training_gymnastic_num) {
+		String [] argAllValue = new String[]{training_set_id, training_id, exercise_id, training_gymnastic_num};
+		String [] sqlSelect = {"_id", "training_id", "exercise_id", "training_gymnastic_num", "weight", "repetition", "warmUp"};
+		String sqlTables = "training_set";
+
 		SQLiteDatabase db = getReadableDatabase();
 		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 
-		String [] sqlSelect = {"_id", "weight", "repetition", "training_gymnastic_num", "training_id", "warmUp", "exercise_id"};
+		qb.setTables(sqlTables);
+		Cursor c = costumCursor(argAllValue, sqlSelect, sqlTables, db, qb);
+
+		c.moveToFirst();
+		db.close();
+		return c;
+	}
+	//----------------------------------------------------------------------------------------------------------------------------------
+
+	//Получаем все подходы в упражнении-------------------------------------------------------------------------------------------------
+	public Cursor getTraining_set_max_weight(String training_set_id, String training_id, String exercise_id, String training_gymnastic_num) {
+		String [] argAllValue = new String[]{training_set_id, training_id, exercise_id, training_gymnastic_num};
+		String [] sqlSelect = {"_id", "training_id", "exercise_id", "training_gymnastic_num", "MAX(weight)", "repetition", "warmUp"};
 		String sqlTables = "training_set";
 
+		SQLiteDatabase db = getReadableDatabase();
+		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+
 		qb.setTables(sqlTables);
-		Cursor c = qb.query(db, sqlSelect, null, null, null, null, null);
+		Cursor c = costumCursor(argAllValue, sqlSelect, sqlTables, db, qb);
+
 		c.moveToFirst();
 		db.close();
 		return c;
@@ -169,6 +171,36 @@ public class DBManadger extends SQLiteAssetHelper {
 		SQLiteDatabase db = getReadableDatabase();
 		db.insert(sqlTables, null, cv);
 		db.close();
+	}
+	//----------------------------------------------------------------------------------------------------------------------------------
+
+	//Получаем кастомный курсов --------------------------------------------------------------------------------------------------------
+	public Cursor costumCursor(String [] argAllValue, String [] sqlSelect, String sqlTables, SQLiteDatabase db, SQLiteQueryBuilder qb) {
+		int j=0;
+
+		ArrayList<String> argValueA = new ArrayList<String>();
+		String argSelection = "";
+
+		for (int i=0; i<argAllValue.length; i++){
+			if (argAllValue[i]!=null) {
+				if (j>0) {
+					argSelection = argSelection + " AND " + sqlSelect[i] + "=?";
+				} else {
+					argSelection = argSelection + sqlSelect[i] + "=?";
+				}
+				argValueA.add(argAllValue[i]);
+				j++;
+			}
+		}
+		String [] argValue = new String[argValueA.size()];
+		for (int i=0; i<argValueA.size(); i++){
+			argValue[i] = argValueA.get(i);
+		}
+
+		qb.setTables(sqlTables);
+		Cursor costumCursor = qb.query(db, sqlSelect, argSelection, argValue, null, null, null);
+
+		return costumCursor;
 	}
 	//----------------------------------------------------------------------------------------------------------------------------------
 }

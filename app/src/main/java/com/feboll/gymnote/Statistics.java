@@ -37,6 +37,7 @@ public class Statistics extends ActionBarActivity {
 	int[] weightCount;
 	String[] trainingCount;
 	private GraphicalView mChartView;
+	private DBManadger db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,23 +50,20 @@ public class Statistics extends ActionBarActivity {
 
 			exData.add("");
 
-			final DBHelper dbOpenHelper = new DBHelper(Statistics.this, "gymnote");
-			final SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
+			db = new DBManadger(this);
 
-			cExGroup = database.query("categoryOfExercise", null, null, null, null, null, null);
+			cExGroup = db.getCategoryOfExercise();
 			cExGroup.moveToFirst();
 			do {
 				groupData.add(cExGroup.getString(1));
-				cExChilode = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id", "exDescription"}, "categoryOfExercise_id=?",
-						new String[] { cExGroup.getString(0)},	null, null, null);
+				cExChilode = db.getExercise(null, cExGroup.getString(0));
 				cExChilode.moveToFirst();
 				do {
-					exData.add(cExChilode.getString(1));
+					exData.add(cExChilode.getString(2));
 				}while (cExChilode.moveToNext());
 			} while (cExGroup.moveToNext());
-
 			cExGroup.close();
-			dbOpenHelper.close();
+			db.close();
 
 			ArrayAdapter<String> groupAdapterSpinner = new ArrayAdapter<String>(Statistics.this, android.R.layout.simple_spinner_item, groupData);
       groupAdapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -87,27 +85,22 @@ public class Statistics extends ActionBarActivity {
 			groupSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 				@Override
 				public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-					DBHelper dbOpenHelper = new DBHelper(Statistics.this, "gymnote");
-					SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
 					exData.clear();
 					groupPos = position;
-						cExChilode = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id", "exDescription"}, "categoryOfExercise_id=?",
-								new String[] { String.valueOf(position+1)},	null, null, null);
+					cExChilode = db.getExercise(null, String.valueOf(position+1));
 						cExChilode.moveToFirst();
 						do {
-							exData.add(cExChilode.getString(1));
+							exData.add(cExChilode.getString(2));
 						}while (cExChilode.moveToNext());
 					exSpinner.setSelection(0);
 					checkCount(groupPos, 0, 0);
 					cExChilode.close();
-					dbOpenHelper.close();
 					exAdapterSpinner.notifyDataSetChanged();
 				}
 				@Override
 				public void onNothingSelected(AdapterView<?> arg0) {
 				}
 			});
-
 			exSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 				@Override
 				public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -165,12 +158,6 @@ public class Statistics extends ActionBarActivity {
 					startActivity(intent);
 					return true;
 				}
-				/*case R.id.chat: {
-					return true;
-				}
-				case R.id.settings:{
-					return true;
-				}*/
 			}
         return super.onOptionsItemSelected(item);
     }
@@ -180,33 +167,23 @@ public class Statistics extends ActionBarActivity {
 		weightCount = new int[1];
 		trainingCount = new String[1];
 
-		DBHelper dbOpenHelper = new DBHelper(Statistics.this, "gymnote");
-		SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-
-		Cursor cExName = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id"}, "categoryOfExercise_id=?",
-				new String[] { String.valueOf(_group+1)},	null, null, null);
+		Cursor cExName = db.getExercise(null, String.valueOf(_group+1));
 		cExName.moveToPosition(_childe);
-		Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "exercise_id=?",
-				new String[] { cExName.getString(0)},	null, null, null);
+		Cursor cEx = db.getTraining_Exercise(null, null, cExName.getString(0), null, null, null, null);
 		cEx.moveToFirst();
 		if(cEx.getCount()>0){
-			Cursor cExTime = database.query("training", new String[] {"_id", "training_start", "training_end"}, "_id=?",
-					new String[] { cEx.getString(0)},	null, null, null);
+			Cursor cExTime = db.getTraining(cEx.getString(0));
 			cExTime.moveToFirst();
 
 			weightCount = new int[cEx.getCount()];
 			trainingCount = new String[cEx.getCount()];
 			do {
 				if (_value==0) {
-					cExSet = database.query("training_set",
-							new String[] {"_id", "MAX(weight)", "repetition", "training_gymnastic_num", "training_id", "warmUp"},
-							"training_gymnastic_num=?", new String[] {cEx.getString(0)},	null, null, null);
+					cExSet = db.getTraining_set_max_weight(null, null, null, cEx.getString(0));
 					cExSet.moveToFirst();
-					weightCount[i] = cExSet.getInt(1);
+					weightCount[i] = cExSet.getInt(4);
 				} else {
-					cExSet = database.query("training_set",
-							new String[] {"_id", "weight", "repetition", "training_gymnastic_num", "training_id", "warmUp"},
-							"training_gymnastic_num=?", new String[] {cEx.getString(0)},	null, null, null);
+					cExSet = db.getTraining_set(null, null, null, cEx.getString(0));
 					cExSet.moveToFirst();
 					if (cExSet.getCount()>0){
 						weightSum = 0;
@@ -260,7 +237,7 @@ public class Statistics extends ActionBarActivity {
 		mRenderer.setXLabelsAngle(0f);
 		mRenderer.setXLabelsPadding(10);
 		mRenderer.setXAxisMin(0.8);
-		mRenderer.setXAxisMax(i-i/3);
+		mRenderer.setXAxisMax(i+0.1);
 		mRenderer.setYAxisMax(max+max*0.1);
 		mRenderer.setYAxisMin(min-max*0.1);
 		mRenderer.setYLabelsAlign(Paint.Align.RIGHT);
@@ -294,7 +271,6 @@ public class Statistics extends ActionBarActivity {
 			mChartView.repaint();
 		}
 		cExChilode.close();
-		dbOpenHelper.close();
 		exAdapterSpinner.notifyDataSetChanged();
 	}
 }

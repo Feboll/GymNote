@@ -45,7 +45,7 @@ public class newTrainingEx extends ActionBarActivity {
 			db = new DBManadger(this);
 
 			if (resume==1){
-				Cursor cTraining = db.getTraining();
+				Cursor cTraining = db.getTraining(null);
 				cTraining.moveToLast();
 				if (cTraining.getCount()!=0){
 					Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
@@ -103,7 +103,7 @@ public class newTrainingEx extends ActionBarActivity {
                 AlertDialog.Builder confirmationDialog = new AlertDialog.Builder(newTrainingEx.this);
                 confirmationDialog.setMessage(R.string.confirmation_message).setPositiveButton(R.string.confirmation_yes, new OnClickListener(){
                     public void onClick(DialogInterface dialog, int arg1) {
-									Cursor cTraining = db.getTraining();
+									Cursor cTraining = db.getTraining(null);
                   cTraining.moveToLast();
 									Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
 									cEx.moveToPosition(id);
@@ -179,7 +179,7 @@ public class newTrainingEx extends ActionBarActivity {
 				Cursor cExChilode = db.getExercise(null, String.valueOf(groupPoz));
 				cExChilode.moveToPosition(childePoz);
 
-				Cursor cTraining = db.getTraining();
+				Cursor cTraining = db.getTraining(null);
 				cTraining.moveToLast();
 				ContentValues cv = new ContentValues();
 				if(cTraining.getCount()<=0 || cTraining.getString(2)!=null){
@@ -188,7 +188,7 @@ public class newTrainingEx extends ActionBarActivity {
 					db.insertItem("training", cv);
 				}
 
-				cTraining = db.getTraining();
+				cTraining = db.getTraining(null);
 				cTraining.moveToLast();
 
 				cv = new ContentValues();
@@ -207,9 +207,9 @@ public class newTrainingEx extends ActionBarActivity {
 
 	public void endTraining (View v){
 		AlertDialog.Builder confirmationDialog = new AlertDialog.Builder(newTrainingEx.this);
-		confirmationDialog.setMessage(R.string.confirmation_message).setPositiveButton(R.string.confirmation_yes, new DialogInterface.OnClickListener(){
+		confirmationDialog.setMessage(R.string.confirmation_message_finish_training).setPositiveButton(R.string.confirmation_yes, new DialogInterface.OnClickListener(){
 			public void onClick(DialogInterface dialog, int arg1) {
-				Cursor cTraining = db.getTraining();
+				Cursor cTraining = db.getTraining(null);
 				cTraining.moveToLast();
 				Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
 				if (cEx.getCount()==0)	db.deleteItem("training", "_id =" + cTraining.getString(0));

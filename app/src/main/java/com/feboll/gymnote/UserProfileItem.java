@@ -25,6 +25,7 @@ public class UserProfileItem extends ActionBarActivity {
 	ListView valueList;
 	int profilePosition = 0;
 	TextView imt, profileName, imtDescription;
+	private DBManadger db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,10 +48,9 @@ public class UserProfileItem extends ActionBarActivity {
 			profileName = (TextView) findViewById(R.id.profileName);
 			imtDescription = (TextView)findViewById(R.id.imtDescription);
 
-			DBHelper dbOpenHelper = new DBHelper(this, "gymnote");
-			SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
+			db = new DBManadger(this);
 
-			final Cursor cProfile = database.query("user_profile", null, null, null, null, null, null);
+			final Cursor cProfile = db.getUser_profile();
 			cProfile.moveToPosition(profilePosition);
 			profileName.setText(cProfile.getString(2));
 			profileTitle.clear();
@@ -79,7 +79,7 @@ public class UserProfileItem extends ActionBarActivity {
 				else if (myfloatvariable>=40) imtDescription.setText(R.string.imt_description_7);
 
 			cProfile.close();
-			dbOpenHelper.close();
+			db.close();
 
 			listadapter = new ArrayAdapter(this, R.layout.list_view, R.id.label, daynames);
 			valueList.setAdapter(listadapter);
@@ -121,11 +121,6 @@ public class UserProfileItem extends ActionBarActivity {
 					startActivity(intent);
 					return true;
 				}
-				/*case R.id.chat: {
-					return true;
-				}
-				case R.id.settings:{
-				}*/
 			}
         return super.onOptionsItemSelected(item);
     }

@@ -9,8 +9,8 @@ android {
 		applicationId "com.feboll.gymnote"
 		minSdkVersion 10
 		targetSdkVersion 20
-		versionCode 7
-		versionName "1.0.8"
+		versionCode 8
+		versionName "1.0.9"
 	}
 	buildTypes {
 		release {

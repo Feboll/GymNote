@@ -38,7 +38,7 @@ public class MyActivity extends ActionBarActivity {
 
 			db = new DBManadger(this);
 
-			Cursor cTraining = db.getTraining();
+			Cursor cTraining = db.getTraining(null);
 			cTraining.moveToLast();
 
 			Cursor cUser = db.getUser_profile();
@@ -81,7 +81,7 @@ public class MyActivity extends ActionBarActivity {
 
 	@Override
 	protected void onResume() {
-		Cursor cTraining = db.getTraining();
+		Cursor cTraining = db.getTraining(null);
 		cTraining.moveToLast();
 		if (cTraining.getCount()!=0 && cTraining.getString(2)==null){
 			newTrainingBtn.setVisibility(View.GONE);

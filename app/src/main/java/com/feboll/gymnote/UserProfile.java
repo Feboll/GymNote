@@ -33,8 +33,7 @@ public class UserProfile extends ActionBarActivity {
 	Button dropBtn;
     ListView prifile_list;
     TextView noProfile;
-
-
+	private DBManadger db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +44,8 @@ public class UserProfile extends ActionBarActivity {
 			prifile_list = (ListView)findViewById(R.id.profile_list);
 			noProfile = (TextView)findViewById(R.id.noProfile);
 
-			DBHelper dbOpenHelper = new DBHelper(this, "gymnote");
-			SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-			Cursor cProfile = database.query("user_profile", null, null, null,	null, null, null);
+			db = new DBManadger(this);
+			Cursor cProfile = db.getUser_profile();
 			cProfile.moveToFirst();
 
 			if (cProfile.getCount()==0){
@@ -65,7 +63,7 @@ public class UserProfile extends ActionBarActivity {
 			prifile_list.setAdapter(ProfileListAdapter);
 
 			cProfile.close();
-			dbOpenHelper.close();
+			db.close();
 
 			prifile_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 				@Override
@@ -86,9 +84,8 @@ public class UserProfile extends ActionBarActivity {
 
     @Override
     protected void onResume() {
-        DBHelper dbOpenHelper = new DBHelper(this, "gymnote");
-        SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-        Cursor cProfile = database.query("user_profile", null, null, null,	null, null, null);
+
+        Cursor cProfile = db.getUser_profile();
         cProfile.moveToFirst();
         if (cProfile.getCount()==0){
             prifile_list.setVisibility(View.GONE);
@@ -104,7 +101,6 @@ public class UserProfile extends ActionBarActivity {
         ProfileListAdapter.notifyDataSetChanged();
 
         cProfile.close();
-        dbOpenHelper.close();
         super.onResume();
     }
 
@@ -175,18 +171,16 @@ public class UserProfile extends ActionBarActivity {
 				@Override
 				public void onClick(View v) {
 					ContentValues cv = new ContentValues();
-					DBHelper dbOpenHelper = new DBHelper(UserProfile.this, "gymnote");
-					SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
+
 
 					cv.put("name", profileTitleE.getText().toString());
 					ProfileName.add(profileTitleE.getText().toString());
-					database.insert("user_profile", null, cv);
+					db.insertItem("user_profile", cv);
 
 					ProfileListAdapter.notifyDataSetChanged();
                     prifile_list.setVisibility(View.VISIBLE);
                     noProfile.setVisibility(View.GONE);
 
-					dbOpenHelper.close();
 					profileTitleE.setText("");
 					alertDialog.dismiss();
 				}
@@ -200,19 +194,17 @@ public class UserProfile extends ActionBarActivity {
                     AlertDialog.Builder confirmationDialog = new AlertDialog.Builder(UserProfile.this);
                     confirmationDialog.setMessage(R.string.confirmation_message).setPositiveButton(R.string.confirmation_yes, new DialogInterface.OnClickListener(){
                         public void onClick(DialogInterface dialog, int arg1) {
-                            DBHelper dbOpenHelper = new DBHelper(UserProfile.this, "gymnote");
-                            SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-                            Cursor cProfile = database.query("user_profile", null, null, null,	null, null, null);
+
+                            Cursor cProfile = db.getUser_profile();
                             cProfile.moveToPosition(id - 1);
                             ProfileName.remove(id-1);
-                            database.delete("user_profile", "_id =" + cProfile.getString(0), null);
+                            db.deleteItem("user_profile", "_id =" + cProfile.getString(0));
                             ProfileListAdapter.notifyDataSetChanged();
-                            cProfile = database.query("user_profile", null, null, null,	null, null, null);
+                            cProfile = db.getUser_profile();
                             if (cProfile.getCount()==0){
                                 prifile_list.setVisibility(View.GONE);
                                 noProfile.setVisibility(View.VISIBLE);
                             }
-                            dbOpenHelper.close();
                             alertDialog.dismiss();
                         }
                     }).setNegativeButton(R.string.confirmation_no, new DialogInterface.OnClickListener(){
@@ -220,10 +212,8 @@ public class UserProfile extends ActionBarActivity {
                             alertDialog.dismiss();
                         }
                     }).show();
-
 				}
 			});
 		}
-
 	}
 }

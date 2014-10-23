@@ -32,6 +32,7 @@ public class TrainingExDescription extends ActionBarActivity {
 	Button dropBtn, editBtn;
 	ListAdapter boxAdapter;
 	TextView textKps, textTonaj;
+	private DBManadger db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,32 +44,29 @@ public class TrainingExDescription extends ActionBarActivity {
 			ListView lvMain = (ListView) findViewById(R.id.setList);
 			TextView noSets = (TextView) findViewById(R.id.noSets);
 
-			DBHelper dbOpenHelper = new DBHelper(this, "gymnote");
-			SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-			Cursor cTraining = database.query("training", null, null, null, null, null, null);
+			db = new DBManadger(this);
+
+			Cursor cTraining = db.getTraining(null);
 			cTraining.moveToPosition(groupPosition);
-			Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
-					new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
+			Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
 			cEx.moveToPosition(childPosition);
-			Cursor cExName = database.query("exercise", new String[] {"_id", "exercise", "categoryOfExercise_id"}, "_id=?",
-					new String[] { String.valueOf(cEx.getString(2))},	null, null, null);
+			Cursor cExName = db.getExercise(cEx.getString(2), null);
 			cExName.moveToFirst();
 			TextView tv = (TextView)findViewById(R.id.exTitle);
-			tv.setText(cExName.getString(1));
-			Cursor cSet = database.query("training_set", new String[] {"_id", "weight", "repetition", "training_gymnastic_num", "training_id"},
-					"training_gymnastic_num=? AND training_id=?", new String[] { cEx.getString(0), cTraining.getString(0)},	null, null, null);
+			tv.setText(cExName.getString(2));
+			Cursor cSet = db.getTraining_set(null, cTraining.getString(0), null, cEx.getString(0));
 			cSet.moveToFirst();
 			if (cSet.getCount()>0){
 				do {
 					if(cSet.getString(2).equals("")){
 						repeat = 0;
 					} else {
-						repeat = cSet.getInt(2);
+						repeat = cSet.getInt(5);
 					}
 					if(cSet.getString(1).equals("")){
 						weightCount = 0;
 					} else {
-						weightCount = cSet.getInt(1);
+						weightCount = cSet.getInt(4);
 					}
 					kps += repeat;
 					tonaj += weightCount*repeat;
@@ -97,7 +95,7 @@ public class TrainingExDescription extends ActionBarActivity {
 			textKps.setText(String.valueOf(kps));
 			textTonaj.setText(String.valueOf(tonaj));
 			cTraining.close(); cEx.close(); cExName.close();
-			dbOpenHelper.close();
+			db.close();
     }
 
     @Override
@@ -154,18 +152,13 @@ public class TrainingExDescription extends ActionBarActivity {
 	protected void onPrepareDialog(int id, Dialog dialog) {
 		final AlertDialog alertDialog = (AlertDialog) dialog;
 
-		DBHelper dbOpenHelper = new DBHelper(TrainingExDescription.this, "gymnote");
-		final SQLiteDatabase database = dbOpenHelper.getWritableDatabase();
-
-		Cursor cTraining = database.query("training", null, null, null, null, null, null);
+		Cursor cTraining = db.getTraining(null);
 		cTraining.moveToPosition(groupPosition);
 
-		Cursor cEx = database.query("training_exercise", new String[] {"_id", "training_id", "exercise_id", "categoryOfExercise_id"}, "training_id=?",
-				new String[] { String.valueOf(cTraining.getString(0))},	null, null, null);
+		Cursor cEx = db.getTraining_Exercise(null, cTraining.getString(0), null, null, null, null, null);
 		cEx.moveToPosition(childPosition);
 
-		final Cursor cSet = database.query("training_set", new String[] {"_id", "weight", "repetition", "training_gymnastic_num", "training_id", "warmUp"},
-				"training_gymnastic_num=? AND training_id=?", new String[] { cEx.getString(0), cTraining.getString(0)},	null, null, null);
+		final Cursor cSet = db.getTraining_set(null, cTraining.getString(0), null, cEx.getString(0));
 		cSet.moveToPosition(position);
 
 		edRepetition = (EditText) alertDialog.findViewById(R.id.repetition);
@@ -176,8 +169,8 @@ public class TrainingExDescription extends ActionBarActivity {
 		if (id == 2){
 			editBtn = (Button) alertDialog.findViewById(R.id.editBtn);
 			dropBtn = (Button) alertDialog.findViewById(R.id.dropBtn);
-			edRepetition.setText(cSet.getString(2));
-			edWeight.setText(cSet.getString(1));
+			edRepetition.setText(cSet.getString(5));
+			edWeight.setText(cSet.getString(4));
 			editBtn.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
@@ -185,7 +178,7 @@ public class TrainingExDescription extends ActionBarActivity {
 					cv.put("weight", edWeight.getText().toString());
 					cv.put("repetition", edRepetition.getText().toString());
 
-					database.update("training_set", cv, "_id=" + cSet.getString(0), null);
+					db.updateItem("training_set", cv, "_id=" + cSet.getString(0));
 
 					tonaj -= Integer.parseInt(weight.get(position))*Integer.parseInt(set.get(position));
 					kps -= Integer.parseInt(set.get(position));
@@ -211,7 +204,7 @@ public class TrainingExDescription extends ActionBarActivity {
 					AlertDialog.Builder confirmationDialog = new AlertDialog.Builder(TrainingExDescription.this);
 					confirmationDialog.setMessage(R.string.confirmation_message).setPositiveButton(R.string.confirmation_yes, new DialogInterface.OnClickListener(){
 						public void onClick(DialogInterface dialog, int arg1) {
-							database.delete("training_set", "_id=" + cSet.getString(0), null);
+							db.deleteItem("training_set", "_id=" + cSet.getString(0));
 
 							tonaj -= Integer.parseInt(weight.get(position))*Integer.parseInt(set.get(position));
 							kps -= Integer.parseInt(set.get(position));
