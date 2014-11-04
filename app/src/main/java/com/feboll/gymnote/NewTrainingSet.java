@@ -82,10 +82,10 @@ public class NewTrainingSet extends ActionBarActivity {
 			if (cSet.getCount()>0) {
 				cSet.moveToFirst();
 				do {
-					kps += cSet.getInt(2);
-					tonaj += cSet.getInt(1)*cSet.getInt(2);
-					set.add(cSet.getString(2));
-					weight.add(cSet.getString(1));
+					kps += cSet.getInt(5);
+					tonaj += cSet.getInt(4)*cSet.getInt(5);
+					set.add(cSet.getString(5));
+					weight.add(cSet.getString(4));
 				} while (cSet.moveToNext());
 			}
 			textKps.setText(String.valueOf(kps));
