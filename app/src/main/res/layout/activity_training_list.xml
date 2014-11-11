@@ -14,7 +14,8 @@
 		android:id="@+id/trainingListView"
 		android:layout_alignParentTop="true"
 		android:layout_alignParentLeft="true"
-		android:layout_alignParentStart="true"/>
+		android:layout_alignParentStart="true"
+		android:layout_above="@+id/button2"/>
 
 	<TextView
 		android:layout_width="wrap_content"
@@ -27,5 +28,20 @@
 		android:visibility="gone"
 		android:layout_alignParentStart="true"
 		android:gravity="center"/>
+
+	<Button
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:text= "@string/search"
+			android:id="@+id/button2"
+			android:minHeight="40dp"
+			android:textColor="@color/button_text_color"
+			android:background="@drawable/btn_selector"
+			android:layout_marginLeft="6dp"
+			android:layout_marginRight="6dp"
+			android:layout_marginTop="6dp"
+			android:layout_alignParentBottom="true"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentStart="true"/>
 
 </RelativeLayout>
